@@ -39,9 +39,16 @@ async function bootstrap() {
   });
 
   const filterPanel = document.getElementById('filterPanel');
+  const filterBackdrop = document.getElementById('filterBackdrop');
+  const setFilterOpen = (open) => {
+    filterPanel.classList.toggle('open', open);
+    filterBackdrop.classList.toggle('open', open);
+  };
   document.getElementById('toggleFilterBtn').addEventListener('click', () => {
-    filterPanel.classList.toggle('open');
+    setFilterOpen(!filterPanel.classList.contains('open'));
   });
+  document.getElementById('filterCloseBtn').addEventListener('click', () => setFilterOpen(false));
+  filterBackdrop.addEventListener('click', () => setFilterOpen(false));
 
   let resizeTimer = null;
   window.addEventListener('resize', () => {

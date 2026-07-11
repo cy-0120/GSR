@@ -93,6 +93,29 @@ button, input, select, textarea {
 
 .filter-panel-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
 .filter-panel-header h2 { margin: 0; font-size: 15px; }
+.filter-panel-header-actions { display: flex; align-items: center; gap: 8px; }
+
+/* 모바일 드로어 전용 닫기 버튼 (데스크톱에서는 숨김) */
+.filter-close-btn {
+  display: none;
+  background: none;
+  border: none;
+  color: var(--text-dim);
+  font-size: 22px;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 2px;
+}
+
+/* 모바일에서 필터 드로어가 열렸을 때 바깥 영역 탭으로 닫기 위한 배경 */
+.filter-backdrop {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.45);
+  z-index: 540;
+}
+.filter-backdrop.open { display: block; }
 
 .filter-group { margin-bottom: 16px; }
 .filter-group-title { font-size: 12px; color: var(--text-dim); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.03em; }
@@ -496,6 +519,7 @@ button, input, select, textarea {
   }
   .filter-panel.open { transform: translateX(0); }
   .filter-toggle-btn { display: block; }
+  .filter-close-btn { display: block; }
   .field-row { grid-template-columns: 1fr; }
 
   .app-header { padding: 8px 12px; }

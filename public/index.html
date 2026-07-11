@@ -3,7 +3,7 @@
 <head>
 <meta charset="UTF-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-<title>강남 안전핀 - 강남구 위험 지도</title>
+<title>GSR</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
 <link rel="stylesheet" href="/css/style.css" />
 </head>
@@ -23,10 +23,14 @@
   </header>
 
   <div class="app-body">
+    <div class="filter-backdrop" id="filterBackdrop"></div>
     <aside class="filter-panel" id="filterPanel">
       <div class="filter-panel-header">
         <h2>필터</h2>
-        <button id="resetFiltersBtn" class="btn-link">초기화</button>
+        <div class="filter-panel-header-actions">
+          <button id="resetFiltersBtn" class="btn-link">초기화</button>
+          <button id="filterCloseBtn" class="filter-close-btn" aria-label="필터 닫기">&times;</button>
+        </div>
       </div>
       <div id="filterGroups" class="filter-groups"></div>
       <div class="filter-summary" id="filterSummary"></div>
