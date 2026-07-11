@@ -23,6 +23,9 @@ html, body {
   font-family: "Pretendard", "Apple SD Gothic Neo", "Malgun Gothic", -apple-system, sans-serif;
   background: var(--bg);
   color: var(--text);
+  /* 페이지 자체의 핀치/더블탭 확대를 막는다. 지도는 Leaflet이 .leaflet-container에
+     touch-action: none을 설정하고 핀치 줌을 직접 처리하므로 영향받지 않는다. */
+  touch-action: pan-x pan-y;
 }
 
 body {
@@ -533,4 +536,16 @@ button, input, select, textarea {
   .leaflet-control-zoom { display: none; }
   /* 화면이 좁을 때 범례가 지도를 덜 가리도록 축소 */
   .legend { font-size: 11px; padding: 6px 8px; gap: 2px; }
+
+  /* iOS는 16px 미만 입력창에 포커스하면 화면을 강제 확대하므로 모바일에서는 16px로 맞춘다. */
+  .field select,
+  .field textarea,
+  .field input[type="text"],
+  .mobile-report-form textarea,
+  .other-input,
+  .filter-search-input,
+  .complaint-form input,
+  .complaint-form select {
+    font-size: 16px;
+  }
 }
