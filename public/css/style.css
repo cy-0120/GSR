@@ -40,6 +40,12 @@ button, input, select, textarea {
   color: inherit;
 }
 
+textarea,
+.field textarea,
+.mobile-report-form textarea {
+  color: var(--report-text);
+}
+
 .app-header {
   display: flex;
   align-items: center;
