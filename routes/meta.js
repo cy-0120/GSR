@@ -6,11 +6,13 @@ const router = express.Router();
 router.get('/', (req, res) => {
   res.json({
     problemTypes: constants.PROBLEM_TYPES,
+    otherProblemType: constants.OTHER_PROBLEM_TYPE,
     riskLevels: constants.RISK_LEVELS,
     timeBands: constants.TIME_BANDS,
     targets: constants.TARGETS,
     statuses: constants.STATUSES,
     congestionLevels: constants.CONGESTION_LEVELS,
+    congestionLevelColors: constants.CONGESTION_LEVEL_COLORS,
     congestionTimeBands: constants.CONGESTION_TIME_BANDS,
     dongs: constants.DONGS,
     officialChannels: constants.OFFICIAL_CHANNELS,

@@ -1,17 +1,15 @@
+// 세부 유형을 카테고리 단위로 묶어 선택지를 줄이고, 목록에 없는 문제는 "기타"로 직접 입력한다.
 const PROBLEM_TYPES = [
-  '도로 파손',
-  '보도블록 파손',
-  '시설 노후화',
-  '가로등 고장',
-  'CCTV 사각지대',
-  '불법 주정차',
-  '전동킥보드 방치',
-  '횡단보도 위험',
-  '골목길 어두움',
-  '공사장 주변 위험',
-  '차량 혼잡',
-  '보행자 혼잡',
+  '도로·보도 파손',
+  '시설물 노후·고장',
+  '안전 사각지대',
+  '통행 방해물',
+  '보행자 위험 요소',
+  '혼잡',
+  '기타',
 ];
+
+const OTHER_PROBLEM_TYPE = '기타';
 
 const RISK_LEVELS = ['낮음', '보통', '높음', '매우 높음'];
 
@@ -21,7 +19,9 @@ const TARGETS = ['학생', '시민', '노약자', '운전자', '보행자'];
 
 const STATUSES = ['접수됨', '확인 필요', '신고문 생성', '공식 신고 완료', '해결됨'];
 
-const CONGESTION_LEVELS = ['한산', '보통', '혼잡', '매우 혼잡'];
+// 혼잡도는 그라데이션 바 형태로 5단계 표시 (녹색 → 빨강)
+const CONGESTION_LEVELS = ['매우 한산', '한산', '보통', '혼잡', '매우 혼잡'];
+const CONGESTION_LEVEL_COLORS = ['#22c55e', '#84cc16', '#eab308', '#f97316', '#ef4444'];
 
 const CONGESTION_TIME_BANDS = [
   '평일 아침 07:30~09:00',
@@ -54,11 +54,13 @@ const OFFICIAL_CHANNELS = [
 
 module.exports = {
   PROBLEM_TYPES,
+  OTHER_PROBLEM_TYPE,
   RISK_LEVELS,
   TIME_BANDS,
   TARGETS,
   STATUSES,
   CONGESTION_LEVELS,
+  CONGESTION_LEVEL_COLORS,
   CONGESTION_TIME_BANDS,
   DONGS,
   CLUSTER_RADIUS_METERS,

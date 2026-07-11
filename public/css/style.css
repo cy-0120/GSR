@@ -25,6 +25,12 @@ html, body {
   color: var(--text);
 }
 
+body {
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
 button, input, select, textarea {
   font-family: inherit;
   color: inherit;
@@ -39,6 +45,7 @@ button, input, select, textarea {
   border-bottom: 1px solid var(--border);
   gap: 12px;
   flex-wrap: wrap;
+  flex: 0 0 auto;
 }
 
 .brand { display: flex; align-items: center; gap: 10px; }
@@ -70,9 +77,12 @@ button, input, select, textarea {
 .app-body {
   display: grid;
   grid-template-columns: 280px 1fr;
-  height: calc(100% - 64px);
+  flex: 1 1 auto;
+  min-height: 0;
   position: relative;
 }
+
+.mobile-report-panel { display: none; }
 
 .filter-panel {
   background: var(--panel);
@@ -103,8 +113,8 @@ button, input, select, textarea {
 
 .filter-toggle-btn {
   display: none;
-  position: fixed;
-  top: 76px;
+  position: absolute;
+  top: 12px;
   left: 12px;
   z-index: 500;
   background: var(--panel-2);
@@ -112,6 +122,22 @@ button, input, select, textarea {
   color: var(--text);
   border-radius: 999px;
   padding: 8px 12px;
+  cursor: pointer;
+}
+
+.mobile-congestion-toggle-btn {
+  display: none;
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  z-index: 500;
+  background: var(--panel-2);
+  border: 1px solid var(--border);
+  color: var(--text);
+  border-radius: 999px;
+  padding: 8px 12px;
+  font-size: 13px;
+  font-weight: 600;
   cursor: pointer;
 }
 
@@ -141,12 +167,12 @@ button, input, select, textarea {
 .dot.green { background: var(--green); }
 
 .detail-panel {
-  position: fixed;
-  top: 64px;
+  position: absolute;
+  top: 0;
   right: 0;
   width: 380px;
   max-width: 92vw;
-  height: calc(100% - 64px);
+  height: 100%;
   background: var(--panel);
   border-left: 1px solid var(--border);
   transform: translateX(100%);
@@ -255,19 +281,60 @@ button, input, select, textarea {
 .modal-body { padding: 16px 18px; overflow-y: auto; display: flex; flex-direction: column; gap: 14px; }
 
 .field { display: flex; flex-direction: column; gap: 6px; font-size: 13px; color: var(--text-dim); }
-.field select, .field textarea, .field input[type="file"] {
+.field select, .field textarea, .field input[type="file"], .field input[type="text"] {
   padding: 9px 10px;
   border-radius: 8px;
   border: 1px solid var(--border);
   background: var(--panel-2);
   color: var(--text);
   font-size: 14px;
+  font-family: inherit;
 }
+.field span { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .field-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
 
 .chip-group { display: flex; flex-wrap: wrap; gap: 6px; }
 
+.other-input { margin-top: 4px; }
+.hidden { display: none !important; }
+
 .hint { font-size: 13px; color: var(--accent); background: rgba(58,160,255,0.1); padding: 8px 10px; border-radius: 8px; margin: 0; }
+.hint-inline { font-size: 12px; margin-bottom: 8px; }
+
+.gradient-bar {
+  display: flex;
+  height: 38px;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 1px solid var(--border);
+  gap: 2px;
+  background: var(--panel-2);
+}
+.gradient-segment {
+  flex: 1;
+  border: none;
+  cursor: pointer;
+  opacity: 0.45;
+  transition: opacity 0.15s, transform 0.1s;
+}
+.gradient-segment:hover { opacity: 0.75; }
+.gradient-segment.active {
+  opacity: 1;
+  transform: scaleY(1.08);
+  box-shadow: inset 0 0 0 2px rgba(255, 255, 255, 0.7);
+}
+.gradient-bar-caption { font-size: 12px; color: var(--text-dim); text-align: center; }
+
+.filter-search-input {
+  width: 100%;
+  padding: 7px 9px;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  background: var(--panel-2);
+  color: var(--text);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
 
 .ai-preview-box { border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; background: var(--panel-2); }
 .ai-preview-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 8px; }
@@ -299,15 +366,79 @@ button, input, select, textarea {
 .leaflet-popup-content-wrapper { background: var(--panel); color: var(--text); }
 .leaflet-popup-tip { background: var(--panel); }
 
+/* 모바일 빠른 제보 패널 (화면 하단 절반) */
+.mobile-report-panel {
+  flex-direction: column;
+  background: var(--panel);
+  border-top: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.mobile-location-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 14px;
+  background: var(--panel-2);
+  border-bottom: 1px solid var(--border);
+  font-size: 13px;
+  flex: 0 0 auto;
+}
+.mobile-location-bar.location-error { color: #ff9f9f; }
+.mobile-location-bar.location-ok { color: #7cf0a8; }
+
+.mobile-report-form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding: 12px 14px 16px;
+}
+
+.mobile-photo-row { display: flex; align-items: center; gap: 10px; }
+.mobile-photo-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: var(--radius);
+  border: 1px dashed var(--accent);
+  color: var(--accent);
+  font-weight: 600;
+  font-size: 14px;
+  cursor: pointer;
+  background: rgba(58, 160, 255, 0.08);
+}
+.mobile-photo-preview { height: 44px; width: 44px; object-fit: cover; border-radius: 8px; border: 1px solid var(--border); }
+
+.mobile-optional-fields {
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 8px 10px;
+}
+.mobile-optional-fields summary {
+  cursor: pointer;
+  font-size: 13px;
+  color: var(--text-dim);
+  font-weight: 600;
+}
+.mobile-optional-fields .field,
+.mobile-optional-fields .field-row {
+  margin-top: 10px;
+}
+
+.mobile-submit-btn { width: 100%; padding: 12px; font-size: 15px; }
+.mobile-submit-btn:disabled { opacity: 0.5; cursor: not-allowed; }
+
 @media (max-width: 860px) {
-  .app-body { grid-template-columns: 1fr; }
+  .app-body { grid-template-columns: 1fr; display: flex; flex-direction: column; }
   .filter-panel {
-    position: fixed;
-    top: 64px;
+    position: absolute;
+    top: 0;
     left: 0;
     width: 280px;
     max-width: 85vw;
-    height: calc(100% - 64px);
+    height: 100%;
     z-index: 550;
     transform: translateX(-100%);
     transition: transform 0.2s ease;
@@ -315,4 +446,11 @@ button, input, select, textarea {
   .filter-panel.open { transform: translateX(0); }
   .filter-toggle-btn { display: block; }
   .field-row { grid-template-columns: 1fr; }
+
+  .app-header { padding: 8px 12px; }
+  .brand p { display: none; }
+  .header-actions { display: none; }
+  .map-area { flex: 1 1 0; min-height: 0; }
+  .mobile-report-panel { display: flex; flex: 1 1 0; min-height: 0; }
+  .mobile-congestion-toggle-btn { display: block; }
 }

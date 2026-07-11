@@ -24,4 +24,5 @@ export const api = {
   previewAi: (body) => request('/api/ai/preview', { method: 'POST', ...json(body) }),
   recordComplaint: (id, body) => request(`/api/spots/${id}/complaint`, { method: 'POST', ...json(body) }),
   updateStatus: (id, status) => request(`/api/spots/${id}/status`, { method: 'PATCH', ...json({ status }) }),
+  reverseGeocode: (lat, lng) => request(`/api/geocode/reverse?lat=${lat}&lng=${lng}`),
 };

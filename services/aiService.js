@@ -1,36 +1,25 @@
-const { PROBLEM_TYPES, TARGETS, TIME_BANDS, RISK_LEVELS } = require('./constants');
+const { PROBLEM_TYPES, OTHER_PROBLEM_TYPE, TARGETS, TIME_BANDS, RISK_LEVELS } = require('./constants');
 
 const ANTHROPIC_API_KEY = process.env.ANTHROPIC_API_KEY;
 const ANTHROPIC_MODEL = process.env.ANTHROPIC_MODEL || 'claude-haiku-4-5-20251001';
 
 const ACTION_MAP = {
-  '도로 파손': '도로 포장 보수',
-  '보도블록 파손': '보도블록 교체 보수',
-  '시설 노후화': '노후 시설물 점검 및 교체',
-  '가로등 고장': '가로등 점검 및 수리',
-  'CCTV 사각지대': 'CCTV 추가 설치 검토',
-  '불법 주정차': '불법 주정차 단속 강화',
-  '전동킥보드 방치': '방치 전동킥보드 수거 조치',
-  '횡단보도 위험': '횡단보도 신호 및 노면 표시 개선',
-  '골목길 어두움': '야간 조명 보강 및 순찰 강화',
-  '공사장 주변 위험': '공사장 안전 펜스·표지판 점검',
-  '차량 혼잡': '차량 흐름 개선 및 신호 체계 검토',
-  '보행자 혼잡': '보행로 확장 또는 보행 신호 개선',
+  '도로·보도 파손': '도로·보도블록 보수',
+  '시설물 노후·고장': '노후 시설물 점검 및 가로등 수리',
+  '안전 사각지대': 'CCTV 추가 설치 및 야간 조명 보강',
+  '통행 방해물': '불법 주정차 단속 및 방치물 수거',
+  '보행자 위험 요소': '횡단보도·공사장 안전시설 점검',
+  '혼잡': '혼잡 구간 흐름 개선 및 안내 검토',
+  [OTHER_PROBLEM_TYPE]: '현장 확인 후 맞춤 조치 검토',
 };
 
 const KEYWORD_MAP = [
-  { keywords: ['보도블록', '보도 블록'], type: '보도블록 파손' },
-  { keywords: ['도로', '파손', '구멍', '포트홀'], type: '도로 파손' },
-  { keywords: ['가로등', '조도', '조명'], type: '가로등 고장' },
-  { keywords: ['어둡', '캄캄'], type: '골목길 어두움' },
-  { keywords: ['cctv', 'CCTV', '사각지대'], type: 'CCTV 사각지대' },
-  { keywords: ['불법 주정차', '주정차', '불법주차'], type: '불법 주정차' },
-  { keywords: ['킥보드'], type: '전동킥보드 방치' },
-  { keywords: ['횡단보도'], type: '횡단보도 위험' },
-  { keywords: ['공사장', '공사 중', '공사현장'], type: '공사장 주변 위험' },
-  { keywords: ['노후', '낡은', '낡아'], type: '시설 노후화' },
-  { keywords: ['차량 혼잡', '차가 많', '정체'], type: '차량 혼잡' },
-  { keywords: ['보행자 혼잡', '사람이 많', '붐빔', '북적'], type: '보행자 혼잡' },
+  { keywords: ['보도블록', '보도 블록', '도로', '파손', '구멍', '포트홀'], type: '도로·보도 파손' },
+  { keywords: ['가로등', '조도', '조명', '노후', '낡은', '낡아'], type: '시설물 노후·고장' },
+  { keywords: ['어둡', '캄캄', 'cctv', 'CCTV', '사각지대'], type: '안전 사각지대' },
+  { keywords: ['불법 주정차', '주정차', '불법주차', '킥보드'], type: '통행 방해물' },
+  { keywords: ['횡단보도', '공사장', '공사 중', '공사현장'], type: '보행자 위험 요소' },
+  { keywords: ['혼잡', '차가 많', '정체', '사람이 많', '붐빔', '북적'], type: '혼잡' },
 ];
 
 function normalizeResult(raw, fallbackInput) {
@@ -91,8 +80,9 @@ function analyzeWithFallback(input) {
   else if (/야간|밤|심야/.test(text)) timeBand = '야간';
   else if (/저녁/.test(text)) timeBand = '저녁';
 
-  let riskLevel = input.riskLevel || '보통';
+  let riskLevel = '보통';
   if (matchedTypes.size >= 2 || /위험|사고|넘어질|다칠/.test(text)) riskLevel = '높음';
+  if (/매우|심각|위급|응급/.test(text) && riskLevel === '높음') riskLevel = '매우 높음';
 
   const problemTypes = Array.from(matchedTypes);
   const recommendedActions = problemTypes.map((t) => ACTION_MAP[t]).filter(Boolean);
@@ -124,9 +114,10 @@ ${RISK_LEVELS.join(', ')}
 [참고 정보]
 - 사용자가 선택한 문제 유형: ${(input.problemTypes || []).join(', ') || '없음'}
 - 사용자가 선택한 시간대: ${input.timeBand || '없음'}
-- 사용자가 체감한 위험도: ${input.riskLevel || '없음'}
 - 보행자 유형: ${input.pedestrianType || '없음'}
 - 위치: 강남구 ${input.dong || ''} (위도 ${input.lat}, 경도 ${input.lng})
+
+위험도는 사용자가 입력하지 않습니다. 제보 내용의 심각성, 대상(학생/노약자 등 취약 대상 여부), 사고 가능성을 근거로 위험도를 직접 판단해서 배정하세요.
 
 다음 JSON 스키마로만 응답하세요:
 {

@@ -43,6 +43,7 @@ function buildSpotSummary(spot) {
   issueReports.forEach((r) => {
     safeJsonArray(r.problem_types).forEach((t) => problemTypes.add(t));
     safeJsonArray(r.ai_problem_types).forEach((t) => problemTypes.add(t));
+    if (r.custom_problem_type) problemTypes.add(r.custom_problem_type);
     if (r.time_band) timeBands.add(r.time_band);
     if (r.ai_time_band) timeBands.add(r.ai_time_band);
     if (r.pedestrian_type) targets.add(r.pedestrian_type);

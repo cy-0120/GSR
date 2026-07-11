@@ -5,7 +5,7 @@ const FILTER_GROUPS = [
   { key: 'target', label: '대상', metaKey: 'targets' },
   { key: 'status', label: '처리 상태', metaKey: 'statuses' },
   { key: 'congestion', label: '혼잡도', metaKey: 'congestionLevels' },
-  { key: 'dong', label: '지역', metaKey: 'dongs' },
+  { key: 'dong', label: '지역', metaKey: 'dongs', searchable: true, placeholder: '동 이름 검색...' },
 ];
 
 const selected = {};
@@ -27,11 +27,30 @@ export function initFilters(meta, onChange) {
     const chipList = document.createElement('div');
     chipList.className = 'filter-chip-list';
 
-    (meta[group.metaKey] || []).forEach((value) => {
+    if (group.searchable) {
+      const searchInput = document.createElement('input');
+      searchInput.type = 'text';
+      searchInput.className = 'filter-search-input';
+      searchInput.placeholder = group.placeholder || '검색...';
+      searchInput.addEventListener('input', () => {
+        const query = searchInput.value.trim().toLowerCase();
+        chipList.querySelectorAll('.chip').forEach((chip) => {
+          const match = chip.textContent.toLowerCase().includes(query);
+          chip.classList.toggle('hidden', !match);
+        });
+      });
+      wrap.appendChild(searchInput);
+    }
+
+    (meta[group.metaKey] || []).forEach((value, i) => {
       const chip = document.createElement('button');
       chip.type = 'button';
       chip.className = 'chip';
       chip.textContent = value;
+      if (group.key === 'congestion' && meta.congestionLevelColors?.[i]) {
+        chip.style.borderColor = meta.congestionLevelColors[i];
+        chip.style.boxShadow = `inset 0 -3px 0 ${meta.congestionLevelColors[i]}`;
+      }
       chip.addEventListener('click', () => {
         if (selected[group.key].has(value)) {
           selected[group.key].delete(value);
@@ -53,6 +72,8 @@ export function initFilters(meta, onChange) {
   document.getElementById('resetFiltersBtn').addEventListener('click', () => {
     FILTER_GROUPS.forEach((g) => selected[g.key].clear());
     document.querySelectorAll('#filterGroups .chip.active').forEach((c) => c.classList.remove('active'));
+    document.querySelectorAll('#filterGroups .filter-search-input').forEach((input) => { input.value = ''; });
+    document.querySelectorAll('#filterGroups .chip.hidden').forEach((c) => c.classList.remove('hidden'));
     onChange(buildQuery());
     updateSummary();
   });

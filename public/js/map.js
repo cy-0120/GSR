@@ -11,6 +11,8 @@ const PIN_COLORS = {
 let map;
 let markerLayer;
 let selectionMarker;
+let userLocationMarker;
+let userLocationAccuracyCircle;
 let clickHandlers = [];
 
 export function initMap() {
@@ -72,4 +74,32 @@ export function renderSpots(spots, onSelect) {
 
 export function flyTo(lat, lng) {
   map.flyTo([lat, lng], Math.max(map.getZoom(), 16));
+}
+
+/** GPS로 확인한 사용자의 현재 위치를 지도에 파란 점 + 정확도 원으로 표시한다. */
+export function setUserLocationMarker(lat, lng, accuracy) {
+  if (userLocationMarker) map.removeLayer(userLocationMarker);
+  if (userLocationAccuracyCircle) map.removeLayer(userLocationAccuracyCircle);
+
+  userLocationMarker = L.circleMarker([lat, lng], {
+    radius: 8,
+    color: '#ffffff',
+    weight: 3,
+    fillColor: '#3aa0ff',
+    fillOpacity: 1,
+  }).addTo(map);
+
+  if (accuracy) {
+    userLocationAccuracyCircle = L.circle([lat, lng], {
+      radius: accuracy,
+      color: '#3aa0ff',
+      weight: 1,
+      fillColor: '#3aa0ff',
+      fillOpacity: 0.12,
+    }).addTo(map);
+  }
+}
+
+export function invalidateMapSize() {
+  if (map) map.invalidateSize();
 }

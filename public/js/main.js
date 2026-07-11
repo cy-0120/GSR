@@ -1,8 +1,9 @@
 import { api } from './api.js';
-import { initMap, renderSpots, flyTo } from './map.js';
+import { initMap, renderSpots, flyTo, invalidateMapSize } from './map.js';
 import { initFilters } from './filters.js';
 import { initReportForm } from './reportForm.js';
 import { initCongestionForm } from './congestionForm.js';
+import { initMobileReportForm } from './mobileReportForm.js';
 import { initDetailPanel, showSpotDetail } from './detailPanel.js';
 import { showToast } from './toast.js';
 
@@ -31,10 +32,21 @@ async function bootstrap() {
     refreshSpots();
     flyTo(spot.lat, spot.lng);
   });
+  initMobileReportForm(meta, (spot) => {
+    refreshSpots();
+    flyTo(spot.lat, spot.lng);
+    showSpotDetail(spot.id);
+  });
 
   const filterPanel = document.getElementById('filterPanel');
   document.getElementById('toggleFilterBtn').addEventListener('click', () => {
     filterPanel.classList.toggle('open');
+  });
+
+  let resizeTimer = null;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimer);
+    resizeTimer = setTimeout(invalidateMapSize, 150);
   });
 
   await refreshSpots();

@@ -26,10 +26,11 @@ CREATE TABLE IF NOT EXISTS reports (
   lng REAL NOT NULL,
   dong TEXT,
   problem_types TEXT, -- JSON array
+  custom_problem_type TEXT, -- "기타" 선택 시 사용자가 직접 입력한 문제 유형
   detail TEXT,
   photo_path TEXT,
   time_band TEXT,
-  risk_level TEXT,
+  risk_level TEXT, -- AI가 제보 내용을 분석해 자동으로 배정한 위험도
   congestion_level TEXT,
   congestion_time_band TEXT,
   pedestrian_type TEXT,

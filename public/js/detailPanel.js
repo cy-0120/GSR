@@ -144,10 +144,13 @@ function render(spot) {
 function reportCardHtml(r) {
   const aiTypes = JSON.parse(r.ai_problem_types || '[]');
   const userTypes = JSON.parse(r.problem_types || '[]');
+  const types = (aiTypes.length ? aiTypes : userTypes).slice();
+  if (r.custom_problem_type && !types.includes(r.custom_problem_type)) types.push(r.custom_problem_type);
   return `
     <div class="report-card">
       <div>${r.detail ? escapeHtml(r.detail) : '(상세 내용 없음)'}</div>
-      <div class="meta">문제유형: ${(aiTypes.length ? aiTypes : userTypes).join(', ') || '미분류'} · 시간대: ${r.ai_time_band || r.time_band || '-'} · 위험도: ${r.ai_risk_level || r.risk_level || '-'}</div>
+      <div class="meta">문제유형: ${types.join(', ') || '미분류'} · 시간대: ${r.ai_time_band || r.time_band || '-'} · 위험도(AI 자동판정): ${r.ai_risk_level || r.risk_level || '-'}</div>
+      ${r.congestion_level ? `<div class="meta">혼잡도: ${r.congestion_level}</div>` : ''}
       <div class="meta">등록: ${formatDateTime(r.created_at)}</div>
       ${r.photo_path ? `<img src="${r.photo_path}" alt="제보 사진" />` : ''}
     </div>

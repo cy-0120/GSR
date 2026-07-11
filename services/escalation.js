@@ -30,7 +30,10 @@ async function maybeEscalate(spot) {
   if (issueReports.length < ESCALATION_THRESHOLD) return spot;
 
   const combinedDetail = issueReports
-    .map((r, i) => `(${i + 1}) ${r.detail || ''}`.trim())
+    .map((r, i) => {
+      const custom = r.custom_problem_type ? ` [기타: ${r.custom_problem_type}]` : '';
+      return `(${i + 1}) ${r.detail || ''}${custom}`.trim();
+    })
     .filter(Boolean)
     .join('\n');
 
@@ -38,6 +41,7 @@ async function maybeEscalate(spot) {
   issueReports.forEach((r) => {
     (JSON.parse(r.problem_types || '[]')).forEach((t) => problemTypeSet.add(t));
     (JSON.parse(r.ai_problem_types || '[]')).forEach((t) => problemTypeSet.add(t));
+    if (r.custom_problem_type) problemTypeSet.add(r.custom_problem_type);
   });
 
   let analysis;
@@ -46,7 +50,6 @@ async function maybeEscalate(spot) {
       detail: combinedDetail,
       problemTypes: Array.from(problemTypeSet),
       timeBand: issueReports[issueReports.length - 1].time_band,
-      riskLevel: '매우 높음',
       pedestrianType: issueReports[issueReports.length - 1].pedestrian_type,
       dong: spot.dong,
       lat: spot.lat,

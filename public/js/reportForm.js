@@ -1,6 +1,6 @@
 import { api } from './api.js';
 import { getDeviceId } from './device.js';
-import { fillSelect, renderChipGroup } from './domHelpers.js';
+import { fillSelect, renderChipGroup, renderGradientBar, setupSearchableInput } from './domHelpers.js';
 import { setSelectionMarker, clearSelectionMarker } from './map.js';
 import { requestLocation } from './locationPicker.js';
 import { showToast } from './toast.js';
@@ -12,21 +12,43 @@ const errorText = document.getElementById('reportFormError');
 const aiPreviewBtn = document.getElementById('aiPreviewBtn');
 const aiPreviewResult = document.getElementById('aiPreviewResult');
 const submitBtn = document.getElementById('reportSubmitBtn');
+const otherInput = document.getElementById('reportProblemTypeOther');
+const congestionCaption = document.getElementById('reportCongestionCaption');
 
+let otherProblemType = '기타';
 let problemTypeChips;
+let congestionBar;
 let selectedLocation = null;
-let lastAiAnalysis = null;
 let onSubmittedCallback = () => {};
 
 export function initReportForm(meta, onSubmitted) {
   onSubmittedCallback = onSubmitted;
+  otherProblemType = meta.otherProblemType || '기타';
 
-  fillSelect(document.getElementById('reportDong'), meta.dongs, '동을 선택하세요');
+  setupSearchableInput(document.getElementById('reportDong'), document.getElementById('reportDongList'), meta.dongs);
   fillSelect(document.getElementById('reportTimeBand'), meta.timeBands, '선택');
-  fillSelect(document.getElementById('reportRiskLevel'), meta.riskLevels, '선택');
-  fillSelect(document.getElementById('reportCongestionLevel'), meta.congestionLevels, '해당 없음');
   fillSelect(document.getElementById('reportPedestrianType'), meta.targets, '선택');
-  problemTypeChips = renderChipGroup(document.getElementById('reportProblemTypes'), meta.problemTypes);
+
+  problemTypeChips = renderChipGroup(document.getElementById('reportProblemTypes'), meta.problemTypes, {
+    onToggle: (value, isActive) => {
+      if (value !== otherProblemType) return;
+      otherInput.classList.toggle('hidden', !isActive);
+      if (isActive) otherInput.focus();
+      else otherInput.value = '';
+    },
+  });
+
+  congestionBar = renderGradientBar(
+    document.getElementById('reportCongestionBar'),
+    meta.congestionLevels,
+    meta.congestionLevelColors,
+    { onSelect: (level) => { congestionCaption.textContent = level; } },
+  );
+
+  document.getElementById('reportCongestionResetBtn').addEventListener('click', () => {
+    congestionBar.reset();
+    congestionCaption.textContent = '해당 없음';
+  });
 
   document.getElementById('openReportBtn').addEventListener('click', startLocationPick);
   document.getElementById('reportChangeLocationBtn').addEventListener('click', startLocationPick);
@@ -53,8 +75,11 @@ function closeModal(reset) {
   if (reset) {
     form.reset();
     problemTypeChips.reset();
+    congestionBar.reset();
+    congestionCaption.textContent = '해당 없음';
+    otherInput.classList.add('hidden');
+    otherInput.value = '';
     selectedLocation = null;
-    lastAiAnalysis = null;
     clearSelectionMarker();
     locationHint.firstChild.textContent = '지도를 클릭해 위치를 선택해 주세요. ';
     aiPreviewResult.textContent = '상세 내용을 입력하고 "AI로 분석하기"를 눌러보세요.';
@@ -63,13 +88,14 @@ function closeModal(reset) {
 }
 
 function collectFormState() {
+  const problemTypes = problemTypeChips.getSelected();
   return {
-    dong: document.getElementById('reportDong').value,
+    dong: document.getElementById('reportDong').value.trim(),
     detail: document.getElementById('reportDetail').value.trim(),
-    problemTypes: problemTypeChips.getSelected(),
+    problemTypes,
+    customProblemType: problemTypes.includes(otherProblemType) ? otherInput.value.trim() : '',
     timeBand: document.getElementById('reportTimeBand').value,
-    riskLevel: document.getElementById('reportRiskLevel').value,
-    congestionLevel: document.getElementById('reportCongestionLevel').value,
+    congestionLevel: congestionBar.getSelected() || '',
     pedestrianType: document.getElementById('reportPedestrianType').value,
   };
 }
@@ -84,6 +110,10 @@ async function runAiPreview() {
     errorText.textContent = '상세 내용 또는 문제 유형을 입력해 주세요.';
     return;
   }
+  if (state.problemTypes.includes(otherProblemType) && !state.customProblemType) {
+    errorText.textContent = '"기타"를 선택했다면 어떤 문제인지 직접 입력해 주세요.';
+    return;
+  }
   errorText.textContent = '';
   aiPreviewBtn.disabled = true;
   aiPreviewBtn.textContent = '분석 중...';
@@ -91,7 +121,6 @@ async function runAiPreview() {
 
   try {
     const { analysis } = await api.previewAi({ ...state, ...selectedLocation });
-    lastAiAnalysis = analysis;
     aiPreviewResult.innerHTML = formatAnalysis(analysis);
   } catch (err) {
     aiPreviewResult.textContent = `AI 분석에 실패했습니다: ${err.message}`;
@@ -106,7 +135,7 @@ function formatAnalysis(analysis) {
     `<strong>문제 유형:</strong> ${analysis.problemTypes.join(', ') || '미분류'}`,
     `<strong>위험 대상:</strong> ${analysis.target}`,
     `<strong>시간대:</strong> ${analysis.timeBand}`,
-    `<strong>위험도:</strong> ${analysis.riskLevel}`,
+    `<strong>위험도 (AI 자동 판정):</strong> ${analysis.riskLevel}`,
     `<strong>추천 조치:</strong> ${analysis.recommendedActions.join(', ') || '없음'}`,
   ];
   return lines.join('<br/>');
@@ -120,12 +149,12 @@ async function handleSubmit(e) {
     errorText.textContent = '지도에서 위치를 선택해 주세요.';
     return;
   }
-  if (!state.dong || !state.timeBand || !state.riskLevel || !state.pedestrianType) {
-    errorText.textContent = '필수 항목을 모두 선택해 주세요.';
-    return;
-  }
   if (!state.detail && state.problemTypes.length === 0) {
     errorText.textContent = '문제 유형 또는 상세 내용을 입력해 주세요.';
+    return;
+  }
+  if (state.problemTypes.includes(otherProblemType) && !state.customProblemType) {
+    errorText.textContent = '"기타"를 선택했다면 어떤 문제인지 직접 입력해 주세요.';
     return;
   }
 
@@ -141,8 +170,8 @@ async function handleSubmit(e) {
     formData.set('dong', state.dong);
     formData.set('detail', state.detail);
     formData.set('problemTypes', JSON.stringify(state.problemTypes));
+    formData.set('customProblemType', state.customProblemType);
     formData.set('timeBand', state.timeBand);
-    formData.set('riskLevel', state.riskLevel);
     formData.set('congestionLevel', state.congestionLevel);
     formData.set('pedestrianType', state.pedestrianType);
 

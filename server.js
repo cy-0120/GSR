@@ -9,6 +9,7 @@ const spotsRoutes = require('./routes/spots');
 const reportsRoutes = require('./routes/reports');
 const congestionRoutes = require('./routes/congestion');
 const aiRoutes = require('./routes/ai');
+const geocodeRoutes = require('./routes/geocode');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
@@ -22,6 +23,7 @@ app.use('/api/spots', spotsRoutes);
 app.use('/api/reports', reportsRoutes);
 app.use('/api/congestion', congestionRoutes);
 app.use('/api/ai', aiRoutes);
+app.use('/api/geocode', geocodeRoutes);
 
 app.get('/health', (req, res) => res.json({ ok: true }));
 

@@ -1,6 +1,6 @@
 import { api } from './api.js';
 import { getDeviceId } from './device.js';
-import { fillSelect, renderChipGroup } from './domHelpers.js';
+import { fillSelect, renderGradientBar, setupSearchableInput } from './domHelpers.js';
 import { setSelectionMarker, clearSelectionMarker } from './map.js';
 import { requestLocation } from './locationPicker.js';
 import { showToast } from './toast.js';
@@ -10,19 +10,26 @@ const form = document.getElementById('congestionForm');
 const locationHint = document.getElementById('congestionLocationHint');
 const errorText = document.getElementById('congestionFormError');
 const submitBtn = form.querySelector('button[type="submit"]');
+const levelCaption = document.getElementById('congestionLevelCaption');
 
-let levelChips;
+let levelBar;
 let selectedLocation = null;
 let onSubmittedCallback = () => {};
 
 export function initCongestionForm(meta, onSubmitted) {
   onSubmittedCallback = onSubmitted;
 
-  fillSelect(document.getElementById('congestionDong'), meta.dongs, '동을 선택하세요');
+  setupSearchableInput(document.getElementById('congestionDong'), document.getElementById('congestionDongList'), meta.dongs);
   fillSelect(document.getElementById('congestionTimeBand'), meta.congestionTimeBands, '시간대를 선택하세요');
-  levelChips = renderChipGroup(document.getElementById('congestionLevelGroup'), meta.congestionLevels, { multi: false });
+  levelBar = renderGradientBar(
+    document.getElementById('congestionLevelBar'),
+    meta.congestionLevels,
+    meta.congestionLevelColors,
+    { onSelect: (level) => { levelCaption.textContent = level; } },
+  );
 
   document.getElementById('openCongestionBtn').addEventListener('click', startLocationPick);
+  document.getElementById('mobileCongestionToggleBtn').addEventListener('click', startLocationPick);
   document.getElementById('congestionChangeLocationBtn').addEventListener('click', startLocationPick);
   document.getElementById('congestionModalCloseBtn').addEventListener('click', () => closeModal(true));
   document.getElementById('congestionCancelBtn').addEventListener('click', () => closeModal(true));
@@ -45,7 +52,8 @@ function closeModal(reset) {
   backdrop.classList.remove('open');
   if (reset) {
     form.reset();
-    levelChips.reset();
+    levelBar.reset();
+    levelCaption.textContent = '혼잡도를 선택하세요';
     selectedLocation = null;
     clearSelectionMarker();
     locationHint.firstChild.textContent = '지도를 클릭해 위치를 선택해 주세요. ';
@@ -55,9 +63,9 @@ function closeModal(reset) {
 
 async function handleSubmit(e) {
   e.preventDefault();
-  const dong = document.getElementById('congestionDong').value;
+  const dong = document.getElementById('congestionDong').value.trim();
   const congestionTimeBand = document.getElementById('congestionTimeBand').value;
-  const [congestionLevel] = levelChips.getSelected();
+  const congestionLevel = levelBar.getSelected();
 
   if (!selectedLocation) {
     errorText.textContent = '지도에서 위치를 선택해 주세요.';

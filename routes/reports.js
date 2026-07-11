@@ -23,11 +23,11 @@ const upload = multer({
 
 const insertReportStmt = db.prepare(`
   INSERT INTO reports (
-    spot_id, kind, device_id, lat, lng, dong, problem_types, detail, photo_path,
+    spot_id, kind, device_id, lat, lng, dong, problem_types, custom_problem_type, detail, photo_path,
     time_band, risk_level, congestion_level, pedestrian_type,
     ai_problem_types, ai_target, ai_time_band, ai_risk_level, ai_recommended_actions, ai_report_text
   ) VALUES (
-    @spotId, 'issue', @deviceId, @lat, @lng, @dong, @problemTypes, @detail, @photoPath,
+    @spotId, 'issue', @deviceId, @lat, @lng, @dong, @problemTypes, @customProblemType, @detail, @photoPath,
     @timeBand, @riskLevel, @congestionLevel, @pedestrianType,
     @aiProblemTypes, @aiTarget, @aiTimeBand, @aiRiskLevel, @aiRecommendedActions, @aiReportText
   )
@@ -48,7 +48,7 @@ router.post('/', upload.single('photo'), async (req, res) => {
   try {
     const {
       deviceId, lat, lng, dong, detail,
-      timeBand, riskLevel, congestionLevel, pedestrianType,
+      timeBand, congestionLevel, pedestrianType, customProblemType,
     } = req.body;
     const problemTypes = parseArrayField(req.body.problemTypes);
 
@@ -74,8 +74,13 @@ router.post('/', upload.single('photo'), async (req, res) => {
 
     const spot = findOrCreateSpot(latNum, lngNum, dong);
 
+    const detailForAi = customProblemType
+      ? `${detail || ''}\n[기타 문제 유형] ${customProblemType}`.trim()
+      : detail;
+
+    // 위험도는 사용자가 입력하지 않고 AI가 제보 내용을 분석해 자동으로 배정한다.
     const analysis = await analyzeReport({
-      detail, problemTypes, timeBand, riskLevel, pedestrianType, dong, lat: latNum, lng: lngNum,
+      detail: detailForAi, problemTypes, timeBand, pedestrianType, dong, lat: latNum, lng: lngNum,
     });
 
     const photoPath = req.file ? `/uploads/${req.file.filename}` : null;
@@ -87,10 +92,11 @@ router.post('/', upload.single('photo'), async (req, res) => {
       lng: lngNum,
       dong: dong || null,
       problemTypes: JSON.stringify(problemTypes),
+      customProblemType: customProblemType || null,
       detail: detail || null,
       photoPath,
       timeBand: timeBand || null,
-      riskLevel: riskLevel || null,
+      riskLevel: analysis.riskLevel || null,
       congestionLevel: congestionLevel || null,
       pedestrianType: pedestrianType || null,
       aiProblemTypes: JSON.stringify(analysis.problemTypes || []),
