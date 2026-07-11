@@ -32,6 +32,12 @@ app.use((err, req, res, next) => {
   res.status(500).json({ error: '서버 오류가 발생했습니다.' });
 });
 
-app.listen(PORT, () => {
-  console.log(`강남 안전핀 서버 실행 중: http://localhost:${PORT}`);
-});
+// Vercel 등 서버리스 런타임은 export된 앱을 직접 핸들러로 사용하므로,
+// 로컬에서 직접 실행할 때만 포트를 연다.
+if (require.main === module) {
+  app.listen(PORT, () => {
+    console.log(`강남 안전핀 서버 실행 중: http://localhost:${PORT}`);
+  });
+}
+
+module.exports = app;
