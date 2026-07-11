@@ -15,6 +15,8 @@ const aiPreviewResult = document.getElementById('aiPreviewResult');
 const submitBtn = document.getElementById('reportSubmitBtn');
 const otherInput = document.getElementById('reportProblemTypeOther');
 const congestionCaption = document.getElementById('reportCongestionCaption');
+const photoInput = document.getElementById('reportPhoto');
+const photoPreview = document.getElementById('reportPhotoPreview');
 
 let otherProblemType = '기타';
 let problemTypeChips;
@@ -56,6 +58,7 @@ export function initReportForm(meta, onSubmitted) {
   document.getElementById('reportModalCloseBtn').addEventListener('click', () => closeModal(true));
   document.getElementById('reportCancelBtn').addEventListener('click', () => closeModal(true));
   backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closeModal(true); });
+  photoInput.addEventListener('change', updatePhotoPreview);
 
   aiPreviewBtn.addEventListener('click', runAiPreview);
   form.addEventListener('submit', handleSubmit);
@@ -69,6 +72,26 @@ function startLocationPick() {
     locationHint.firstChild.textContent = `선택된 위치: 위도 ${lat.toFixed(6)}, 경도 ${lng.toFixed(6)} `;
     backdrop.classList.add('open');
   });
+}
+
+function updatePhotoPreview() {
+  const file = photoInput.files?.[0];
+  if (!file) {
+    photoPreview.classList.add('hidden');
+    photoPreview.removeAttribute('src');
+    return;
+  }
+
+  const reader = new FileReader();
+  reader.onload = () => {
+    photoPreview.src = reader.result;
+    photoPreview.classList.remove('hidden');
+  };
+  reader.onerror = () => {
+    photoPreview.classList.add('hidden');
+    photoPreview.removeAttribute('src');
+  };
+  reader.readAsDataURL(file);
 }
 
 function closeModal(reset) {
@@ -85,6 +108,8 @@ function closeModal(reset) {
     locationHint.firstChild.textContent = '지도를 클릭해 위치를 선택해 주세요. ';
     aiPreviewResult.textContent = '상세 내용을 입력하고 "AI로 분석하기"를 눌러보세요.';
     errorText.textContent = '';
+    photoPreview.classList.add('hidden');
+    photoPreview.removeAttribute('src');
   }
 }
 

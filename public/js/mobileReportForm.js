@@ -61,12 +61,23 @@ export function initMobileReportForm(meta, onSubmitted) {
     const file = photoInput.files[0];
     if (!file) {
       photoPreview.classList.add('hidden');
+      photoPreview.removeAttribute('src');
       photoLabel.textContent = '📷 사진 촬영';
       return;
     }
-    photoPreview.src = URL.createObjectURL(file);
-    photoPreview.classList.remove('hidden');
-    photoLabel.textContent = '📷 사진 변경';
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      photoPreview.src = reader.result;
+      photoPreview.classList.remove('hidden');
+      photoLabel.textContent = '📷 사진 변경';
+    };
+    reader.onerror = () => {
+      photoPreview.classList.add('hidden');
+      photoPreview.removeAttribute('src');
+      photoLabel.textContent = '📷 사진 촬영';
+    };
+    reader.readAsDataURL(file);
   });
 
   refreshBtn.addEventListener('click', requestLocation);
@@ -139,7 +150,7 @@ function resetFormFields() {
   otherInput.classList.add('hidden');
   otherInput.value = '';
   photoPreview.classList.add('hidden');
-  photoPreview.src = '';
+  photoPreview.removeAttribute('src');
   photoLabel.textContent = '📷 사진 촬영';
   errorText.textContent = '';
 }
