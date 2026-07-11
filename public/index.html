@@ -1,0 +1,168 @@
+<!doctype html>
+<html lang="ko">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>강남 안전핀 - 강남구 위험 지도</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+<link rel="stylesheet" href="/css/style.css" />
+</head>
+<body>
+  <header class="app-header">
+    <div class="brand">
+      <span class="brand-pin">📍</span>
+      <div>
+        <h1>강남 안전핀</h1>
+        <p>강남구 위험 지도 · 시민 제보 기반 안전 플랫폼</p>
+      </div>
+    </div>
+    <div class="header-actions">
+      <button id="openCongestionBtn" class="btn btn-secondary">혼잡도 조사</button>
+      <button id="openReportBtn" class="btn btn-primary">문제 제보하기</button>
+    </div>
+  </header>
+
+  <div class="app-body">
+    <aside class="filter-panel" id="filterPanel">
+      <div class="filter-panel-header">
+        <h2>필터</h2>
+        <button id="resetFiltersBtn" class="btn-link">초기화</button>
+      </div>
+      <div id="filterGroups" class="filter-groups"></div>
+      <div class="filter-summary" id="filterSummary"></div>
+    </aside>
+
+    <button id="toggleFilterBtn" class="filter-toggle-btn" aria-label="필터 열기/닫기">☰ 필터</button>
+
+    <main class="map-area">
+      <div id="map"></div>
+      <div class="legend">
+        <div><span class="dot red"></span>위험 높음</div>
+        <div><span class="dot orange"></span>주의 필요</div>
+        <div><span class="dot yellow"></span>확인 필요</div>
+        <div><span class="dot blue"></span>혼잡 정보</div>
+        <div><span class="dot green"></span>해결됨</div>
+      </div>
+    </main>
+
+    <section class="detail-panel" id="detailPanel">
+      <button class="detail-close" id="detailCloseBtn">&times;</button>
+      <div id="detailContent"></div>
+    </section>
+  </div>
+
+  <!-- 문제 제보 모달 -->
+  <div class="modal-backdrop" id="reportModalBackdrop">
+    <div class="modal">
+      <div class="modal-header">
+        <h2>지도 기반 문제 제보</h2>
+        <button class="modal-close" id="reportModalCloseBtn">&times;</button>
+      </div>
+      <form id="reportForm" class="modal-body">
+        <p class="hint" id="reportLocationHint">지도를 클릭해 위치를 선택해 주세요.
+          <button type="button" class="btn-link" id="reportChangeLocationBtn">위치 다시 선택</button>
+        </p>
+
+        <label class="field">
+          <span>지역 (동)</span>
+          <select name="dong" id="reportDong" required></select>
+        </label>
+
+        <label class="field">
+          <span>문제 유형 (복수 선택 가능)</span>
+          <div class="chip-group" id="reportProblemTypes"></div>
+        </label>
+
+        <label class="field">
+          <span>상세 내용</span>
+          <textarea name="detail" id="reportDetail" rows="4" placeholder="예) 학원 끝나고 밤에 여기 지나가는데 보도블록이 깨져 있고 가로등도 어두워서 위험해요."></textarea>
+        </label>
+
+        <label class="field">
+          <span>사진 첨부 (선택)</span>
+          <input type="file" name="photo" id="reportPhoto" accept="image/*" />
+        </label>
+
+        <div class="field-row">
+          <label class="field">
+            <span>발생 시간대</span>
+            <select name="timeBand" id="reportTimeBand" required></select>
+          </label>
+          <label class="field">
+            <span>위험도 체감</span>
+            <select name="riskLevel" id="reportRiskLevel" required></select>
+          </label>
+        </div>
+
+        <div class="field-row">
+          <label class="field">
+            <span>혼잡 여부</span>
+            <select name="congestionLevel" id="reportCongestionLevel"></select>
+          </label>
+          <label class="field">
+            <span>보행자 유형</span>
+            <select name="pedestrianType" id="reportPedestrianType" required></select>
+          </label>
+        </div>
+
+        <div class="ai-preview-box">
+          <div class="ai-preview-header">
+            <strong>AI 분석 미리보기</strong>
+            <button type="button" id="aiPreviewBtn" class="btn btn-ghost">AI로 분석하기</button>
+          </div>
+          <div id="aiPreviewResult" class="ai-preview-result">상세 내용을 입력하고 "AI로 분석하기"를 눌러보세요.</div>
+        </div>
+
+        <p class="error-text" id="reportFormError"></p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="reportCancelBtn">취소</button>
+          <button type="submit" class="btn btn-primary" id="reportSubmitBtn">제보 접수하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- 혼잡도 조사 모달 -->
+  <div class="modal-backdrop" id="congestionModalBackdrop">
+    <div class="modal modal-sm">
+      <div class="modal-header">
+        <h2>혼잡도 조사</h2>
+        <button class="modal-close" id="congestionModalCloseBtn">&times;</button>
+      </div>
+      <form id="congestionForm" class="modal-body">
+        <p class="hint" id="congestionLocationHint">지도를 클릭해 위치를 선택해 주세요.
+          <button type="button" class="btn-link" id="congestionChangeLocationBtn">위치 다시 선택</button>
+        </p>
+
+        <label class="field">
+          <span>지역 (동)</span>
+          <select name="dong" id="congestionDong" required></select>
+        </label>
+
+        <label class="field">
+          <span>혼잡 시간</span>
+          <select name="congestionTimeBand" id="congestionTimeBand" required></select>
+        </label>
+
+        <label class="field">
+          <span>혼잡도</span>
+          <div class="chip-group" id="congestionLevelGroup"></div>
+        </label>
+
+        <p class="error-text" id="congestionFormError"></p>
+
+        <div class="modal-actions">
+          <button type="button" class="btn btn-ghost" id="congestionCancelBtn">취소</button>
+          <button type="submit" class="btn btn-primary">혼잡도 제보하기</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <div class="toast" id="toast"></div>
+
+  <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+  <script type="module" src="/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,17 @@
+{
+  "name": "gangnam-safety-pin",
+  "version": "1.0.0",
+  "description": "강남구 위험 지도 - 시민 제보 기반 공간 클러스터링 & AI 민원문 자동 생성 서비스",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node --watch server.js"
+  },
+  "license": "MIT",
+  "dependencies": {
+    "better-sqlite3": "^11.3.0",
+    "dotenv": "^16.4.5",
+    "express": "^4.19.2",
+    "multer": "^2.0.0"
+  }
+}
