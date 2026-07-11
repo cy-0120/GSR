@@ -141,7 +141,9 @@ button, input, select, textarea {
   cursor: pointer;
 }
 
-.map-area { position: relative; height: 100%; }
+/* z-index: 0 으로 스태킹 컨텍스트를 만들어 Leaflet 내부 컨트롤(z-index 1000)이
+   제보 페이지·모달 등 바깥 오버레이 위로 떠오르지 않게 가둔다. */
+.map-area { position: relative; height: 100%; z-index: 0; }
 #map { height: 100%; width: 100%; background: #0b1017; }
 
 .legend {
@@ -502,4 +504,9 @@ button, input, select, textarea {
   .map-area { flex: 1 1 0; min-height: 0; }
   .mobile-report-panel { display: flex; flex: 1 1 0; min-height: 0; }
   .mobile-congestion-toggle-btn { display: block; }
+
+  /* 모바일은 핀치 줌이 가능하므로 +/- 버튼을 숨겨 필터 버튼과의 겹침과 지도 가림을 없앤다. */
+  .leaflet-control-zoom { display: none; }
+  /* 화면이 좁을 때 범례가 지도를 덜 가리도록 축소 */
+  .legend { font-size: 11px; padding: 6px 8px; gap: 2px; }
 }
