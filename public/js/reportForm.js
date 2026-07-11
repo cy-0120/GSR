@@ -4,6 +4,7 @@ import { fillSelect, renderChipGroup, renderGradientBar, setupSearchableInput } 
 import { setSelectionMarker, clearSelectionMarker } from './map.js';
 import { requestLocation } from './locationPicker.js';
 import { showToast } from './toast.js';
+import { compressImageFile } from './photoUtils.js';
 
 const backdrop = document.getElementById('reportModalBackdrop');
 const form = document.getElementById('reportForm');
@@ -176,7 +177,10 @@ async function handleSubmit(e) {
     formData.set('pedestrianType', state.pedestrianType);
 
     const photoFile = document.getElementById('reportPhoto').files[0];
-    if (photoFile) formData.set('photo', photoFile);
+    if (photoFile) {
+      const compressedPhoto = await compressImageFile(photoFile);
+      formData.set('photo', compressedPhoto);
+    }
 
     const result = await api.createReport(formData);
     showToast('제보가 접수되었습니다. 감사합니다!');

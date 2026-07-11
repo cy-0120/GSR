@@ -4,6 +4,7 @@ import { fillSelect, renderChipGroup, renderGradientBar, setupSearchableInput } 
 import { getCurrentPosition } from './geolocation.js';
 import { setUserLocationMarker, flyTo } from './map.js';
 import { showToast } from './toast.js';
+import { compressImageFile } from './photoUtils.js';
 
 const statusBar = document.querySelector('.mobile-location-bar');
 const statusEl = document.getElementById('mobileLocationStatus');
@@ -179,7 +180,10 @@ async function handleSubmit(e) {
     formData.set('congestionLevel', state.congestionLevel);
 
     const photoFile = photoInput.files[0];
-    if (photoFile) formData.set('photo', photoFile);
+    if (photoFile) {
+      const compressedPhoto = await compressImageFile(photoFile);
+      formData.set('photo', compressedPhoto);
+    }
 
     const result = await api.createReport(formData);
     showToast('제보가 접수되었습니다. 감사합니다!');

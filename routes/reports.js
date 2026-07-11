@@ -12,9 +12,14 @@ const router = express.Router();
 
 const upload = multer({
   storage: multer.memoryStorage(),
-  limits: { fileSize: 5 * 1024 * 1024 },
+  limits: { fileSize: 2 * 1024 * 1024 },
 });
-
+router.use((err, req, res, next) => {
+  if (err instanceof multer.MulterError && err.code === 'LIMIT_FILE_SIZE') {
+    return res.status(413).json({ error: '사진 용량이 너무 큽니다. 더 작은 사진으로 다시 시도해 주세요.' });
+  }
+  next(err);
+});
 function parseArrayField(value) {
   if (!value) return [];
   if (Array.isArray(value)) return value;
@@ -27,6 +32,10 @@ function parseArrayField(value) {
 }
 
 router.post('/', upload.single('photo'), async (req, res) => {
+  if (req.fileValidationError) {
+    return res.status(413).json({ error: '사진 용량이 너무 큽니다. 더 작은 사진으로 다시 시도해 주세요.' });
+  }
+
   try {
     const {
       deviceId, lat, lng, dong, detail,
