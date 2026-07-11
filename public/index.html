@@ -47,10 +47,24 @@
     </main>
 
     <section class="mobile-report-panel" id="mobileReportPanel">
+      <div class="mobile-cta-area">
+        <span id="mobileLocationSummary">📍 위치 확인 중...</span>
+        <button type="button" class="btn btn-primary mobile-cta-btn" id="mobileOpenReportPageBtn" disabled>🚨 제보하기</button>
+      </div>
+    </section>
+
+    <section class="mobile-report-page" id="mobileReportFormPage">
+      <div class="mobile-report-page-header">
+        <button type="button" class="btn-link" id="mobileReportBackBtn">← 뒤로</button>
+        <strong>위험 요소 제보하기</strong>
+        <span class="mobile-report-page-header-spacer"></span>
+      </div>
+
       <div class="mobile-location-bar">
         <span id="mobileLocationStatus">📍 위치 확인 중...</span>
         <button type="button" class="btn-link" id="mobileLocationRefreshBtn">새로고침</button>
       </div>
+
       <form id="mobileReportForm" class="mobile-report-form">
         <div class="chip-group" id="mobileProblemTypes"></div>
         <input type="text" id="mobileProblemTypeOther" class="other-input hidden" placeholder="기타 문제 유형을 직접 입력해 주세요" />

@@ -366,11 +366,60 @@ button, input, select, textarea {
 .leaflet-popup-content-wrapper { background: var(--panel); color: var(--text); }
 .leaflet-popup-tip { background: var(--panel); }
 
-/* 모바일 빠른 제보 패널 (화면 하단 절반) */
+/* 모바일 빠른 제보 패널 (화면 하단 절반) — 버튼 1개만 노출 */
 .mobile-report-panel {
   flex-direction: column;
   background: var(--panel);
   border-top: 1px solid var(--border);
+  overflow-y: auto;
+}
+
+.mobile-cta-area {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  height: 100%;
+  padding: 20px;
+  text-align: center;
+}
+.mobile-cta-area > span { font-size: 14px; color: var(--text-dim); }
+
+.mobile-cta-btn {
+  width: 100%;
+  max-width: 320px;
+  padding: 18px;
+  font-size: 18px;
+  border-radius: 14px;
+  box-shadow: 0 6px 20px rgba(58, 160, 255, 0.25);
+}
+.mobile-cta-btn:disabled { opacity: 0.5; cursor: not-allowed; box-shadow: none; }
+
+/* 모바일 제보 폼 전체화면 페이지 (제보하기 버튼 클릭 시 다음 화면으로 전환) */
+.mobile-report-page {
+  display: none;
+  position: absolute;
+  inset: 0;
+  background: var(--panel);
+  z-index: 700;
+  flex-direction: column;
+}
+.mobile-report-page.open { display: flex; }
+
+.mobile-report-page-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 12px 14px;
+  border-bottom: 1px solid var(--border);
+  flex: 0 0 auto;
+}
+.mobile-report-page-header strong { font-size: 15px; }
+.mobile-report-page-header-spacer { width: 40px; }
+
+.mobile-report-page form.mobile-report-form {
+  flex: 1 1 auto;
   overflow-y: auto;
 }
 

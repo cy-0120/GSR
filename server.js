@@ -2,7 +2,7 @@ require('dotenv').config();
 const path = require('path');
 const express = require('express');
 
-require('./config/db'); // DB 초기화 (스키마 생성)
+require('./config/db'); // DB 클라이언트 생성 (스키마 준비는 첫 쿼리 시 지연 초기화)
 
 const metaRoutes = require('./routes/meta');
 const spotsRoutes = require('./routes/spots');

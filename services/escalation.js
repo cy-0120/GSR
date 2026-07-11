@@ -2,22 +2,6 @@ const db = require('../config/db');
 const { analyzeReport, buildReportText } = require('./aiService');
 const { ESCALATION_THRESHOLD } = require('./constants');
 
-const issueReportsForSpotStmt = db.prepare(`
-  SELECT * FROM reports WHERE spot_id = ? AND kind = 'issue' ORDER BY created_at ASC
-`);
-
-const updateEscalationStmt = db.prepare(`
-  UPDATE spots SET
-    risk_level = '매우 높음',
-    status = '신고문 생성',
-    escalated = 1,
-    ai_report_text = @aiReportText,
-    ai_recommended_actions = @aiRecommendedActions,
-    ai_target = @aiTarget,
-    updated_at = datetime('now')
-  WHERE id = @id
-`);
-
 /**
  * 스팟에 누적된 신고가 5건 이상이면 고위험 지역으로 자동 격상하고,
  * AI가 여러 제보를 종합한 공식 민원 신고문을 생성한다.
@@ -26,7 +10,10 @@ const updateEscalationStmt = db.prepare(`
 async function maybeEscalate(spot) {
   if (spot.escalated) return spot;
 
-  const issueReports = issueReportsForSpotStmt.all(spot.id);
+  const issueReports = await db.all(
+    `SELECT * FROM reports WHERE spot_id = @spotId AND kind = 'issue' ORDER BY created_at ASC`,
+    { spotId: spot.id },
+  );
   if (issueReports.length < ESCALATION_THRESHOLD) return spot;
 
   const combinedDetail = issueReports
@@ -78,14 +65,25 @@ async function maybeEscalate(spot) {
 
   const finalReportText = `${analysis.reportText}\n\n(누적 신고 ${issueReports.length}건으로 고위험 지역 자동 격상됨)`;
 
-  updateEscalationStmt.run({
-    id: spot.id,
-    aiReportText: finalReportText,
-    aiRecommendedActions: JSON.stringify(analysis.recommendedActions || []),
-    aiTarget: analysis.target || null,
-  });
+  await db.run(
+    `UPDATE spots SET
+      risk_level = '매우 높음',
+      status = '신고문 생성',
+      escalated = 1,
+      ai_report_text = @aiReportText,
+      ai_recommended_actions = @aiRecommendedActions,
+      ai_target = @aiTarget,
+      updated_at = datetime('now')
+    WHERE id = @id`,
+    {
+      id: spot.id,
+      aiReportText: finalReportText,
+      aiRecommendedActions: JSON.stringify(analysis.recommendedActions || []),
+      aiTarget: analysis.target || null,
+    },
+  );
 
-  return db.prepare('SELECT * FROM spots WHERE id = ?').get(spot.id);
+  return db.get('SELECT * FROM spots WHERE id = @id', { id: spot.id });
 }
 
 module.exports = { maybeEscalate };

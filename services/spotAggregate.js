@@ -1,8 +1,6 @@
 const db = require('../config/db');
 const { RISK_LEVELS } = require('./constants');
 
-const reportsForSpotStmt = db.prepare('SELECT * FROM reports WHERE spot_id = ? ORDER BY created_at ASC');
-
 function riskRank(level) {
   const idx = RISK_LEVELS.indexOf(level);
   return idx === -1 ? 0 : idx;
@@ -29,8 +27,8 @@ function getPinColor({ status, riskLevel, hasIssueReports }) {
 /**
  * 스팟에 딸린 모든 신고(issue+congestion)를 모아 지도/필터에 필요한 집계 정보를 만든다.
  */
-function buildSpotSummary(spot) {
-  const reports = reportsForSpotStmt.all(spot.id);
+async function buildSpotSummary(spot) {
+  const reports = await db.all('SELECT * FROM reports WHERE spot_id = @spotId ORDER BY created_at ASC', { spotId: spot.id });
   const issueReports = reports.filter((r) => r.kind === 'issue');
   const congestionReports = reports.filter((r) => r.kind === 'congestion');
 
@@ -89,16 +87,17 @@ function buildSpotSummary(spot) {
  * 새 이슈 제보가 들어온 뒤 스팟의 위험도/상태를 재계산한다.
  * 이미 공식 신고 완료/해결됨 단계로 넘어간 스팟은 자동으로 되돌리지 않는다.
  */
-function updateSpotAggregateStatus(spotId) {
-  const spot = db.prepare('SELECT * FROM spots WHERE id = ?').get(spotId);
-  const summary = buildSpotSummary(spot);
+async function updateSpotAggregateStatus(spotId) {
+  const spot = await db.get('SELECT * FROM spots WHERE id = @id', { id: spotId });
+  const summary = await buildSpotSummary(spot);
 
   let nextStatus = spot.status;
   if (spot.status === '접수됨') nextStatus = '확인 필요';
 
-  db.prepare(`
-    UPDATE spots SET risk_level = @riskLevel, status = @status, updated_at = datetime('now') WHERE id = @id
-  `).run({ riskLevel: summary.highestRisk, status: nextStatus, id: spotId });
+  await db.run(
+    `UPDATE spots SET risk_level = @riskLevel, status = @status, updated_at = datetime('now') WHERE id = @id`,
+    { riskLevel: summary.highestRisk, status: nextStatus, id: spotId },
+  );
 }
 
 function matchesFilter(summary, filters) {
